@@ -1,1 +1,70 @@
-@import './assets/styles/antd.custom.less';
+@import './assets/styles/main.less';
+
+body {
+    font-size: 16px;
+}
+
+.tzf {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+
+    > .tzf-header {
+        flex-shrink: 1;
+        background: #ffffff;
+        padding: 0;
+        z-index: 1;
+    }
+
+    > .tzf-content {
+        flex-grow: 1;
+        background: #ffffff;
+        padding: 0;
+    }
+
+    > .tzf-footer {
+        flex-shrink: 1;
+        background: #ffffff;
+        padding: 0;
+    }
+}
+
+.tzf-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tzf-pad {
+    padding: 20px;
+
+    &-x {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    &-y {
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+}
+
+.tzf-shadow {
+    box-shadow: 0 0 25px 5px #f2f2f2;
+
+    &-light {
+        box-shadow: 0 0 25px 5px #f5f5f5;
+    }
+
+    &-dark {
+        box-shadow: 0 0 25px 5px #f0f0f0;
+    }
+}
+
+.tzf-border-none {
+    border: none;
+}
+
+.tzf-banner {
+    padding-top: 80px;
+    padding-bottom: 80px;
+}

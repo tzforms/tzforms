@@ -1,17 +1,20 @@
 const { CleanWebpackPlugin: CleanPlugin } = require('clean-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const HtmlPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { join, resolve } = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const { TsconfigPathsPlugin } = require('tsconfig-paths-webpack-plugin');
-const { DefinePlugin, ProvidePlugin } = require('webpack');
-const { dependencies } = require('./package.json');
+const {
+    DefinePlugin,
+    ProvidePlugin
+} = require('webpack');
 
 const nodeModulesPath = resolve(__dirname, './node_modules');
 const srcPath = resolve(__dirname, './src');
 const distPath = resolve(__dirname, './dist');
 
-module.exports = (env, argv) => {
+module.exports = (env) => {
     const isProd = env.NODE_ENV === 'production';
 
     return {
@@ -57,32 +60,50 @@ module.exports = (env, argv) => {
                             }
                         }
                     ]
+                },
+                {
+                    test: /\.(jpe?g|png|gif|webp)$/,
+                    use: [
+                        {
+                            loader: 'file-loader',
+                            options: {
+                                name: isProd ? '[name].[contenthash].[ext]' : '[name].[ext]',
+                                outputPath: 'assets/',
+                                publicPath: '/assets'
+                            }
+                        }
+                    ]
                 }
             ]
         },
         plugins: [
             new CleanPlugin(),
             new DefinePlugin({
-                ENVIRONMENT: JSON.stringify(env.NODE_ENV)
+                ENVIRONMENT: JSON.stringify(isProd ? 'production' : 'development')
             }),
             new ProvidePlugin({
                 Buffer: ['buffer', 'Buffer']
             }),
             new HtmlPlugin({
-                template: join(srcPath, 'index.ejs'),
-                templateParameters: {
-                    cdnAntd: `https://unpkg.com/antd@${dependencies['antd'].match(/(\d+\.?)+/g)[0]}/dist/antd${isProd ? '.min' : ''}.js`,
-                    cdnReact: `https://unpkg.com/react@${dependencies['react'].match(/(\d+\.?)+/g)[0]}/umd/react${isProd ? '.production.min' : '.development'}.js`,
-                    cdnReactDom: `https://unpkg.com/react-dom@${dependencies['react-dom'].match(/(\d+\.?)+/g)[0]}/umd/react-dom${isProd ? '.production.min' : '.development'}.js`,
-                    cdnReactRouterDom: `https://unpkg.com/react-router-dom@${dependencies['react-router-dom'].match(/(\d+\.?)+/g)[0]}/umd/react-router-dom${isProd ? '.min' : ''}.js`
-                }
+                template: join(srcPath, 'index.ejs')
             }),
             new MiniCssExtractPlugin({
-                filename: isProd ? '[name].[chunkhash].css' : '[name].css'
+                filename: isProd ? '[name].[contenthash].css' : '[name].css'
             })
         ],
         resolve: {
-            extensions: ['.css', '.js', '.json', '.less', '.ts', '.tsx'],
+            extensions: [
+                '.gif',
+                '.jpg',
+                '.jpeg',
+                '.js',
+                '.json',
+                '.less',
+                '.png',
+                '.ts',
+                '.tsx',
+                '.webp'
+            ],
             modules: [
                 nodeModulesPath,
                 srcPath
@@ -100,15 +121,11 @@ module.exports = (env, argv) => {
                 'stream': require.resolve('stream-browserify')
             }
         },
-        externals: {
-            'antd': 'antd',
-            'react': 'React',
-            'react-dom': 'ReactDOM',
-            'react-router-dom': 'ReactRouterDOM'
-        },
         optimization: {
-            minimize: isProd,
-            minimizer: [new TerserPlugin()],
+            minimizer: [
+                new CssMinimizerPlugin(),
+                new TerserPlugin()
+            ],
             runtimeChunk: 'single',
             splitChunks: {
                 chunks: 'all',
@@ -129,6 +146,7 @@ module.exports = (env, argv) => {
         },
         devtool: 'source-map',
         devServer: {
+            contentBase: '/',
             historyApiFallback: true,
             port: 8080,
             publicPath: '/'

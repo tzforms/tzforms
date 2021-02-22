@@ -1,26 +1,23 @@
-import Layout from 'antd/lib/layout';
+import Typography from 'antd/lib/typography';
 import React, { Fragment } from 'react';
-import Helmet from 'react-helmet';
-import Footer from '~components/Footer';
-import Header from '~components/Header';
 
 function Home() {
 
 
     return (
-        <Fragment>
-            <Helmet>
-                <title>Home | tzforms</title>
-            </Helmet>
-
-            <Layout>
-                <Header />
-                <Layout.Content>
-                    Home
-                </Layout.Content>
-                <Footer />
-            </Layout>
-        </Fragment>
+        <div className="tzf-banner">
+            <div className="tzf-container tzf-pad">
+                <Typography.Title 
+                    style={{
+                        color: '#333333',
+                        fontWeight: 300,
+                        marginBottom: '4px'
+                    }}
+                >
+                    Create incredible forms backed by smart contracts.
+                </Typography.Title>
+            </div>
+        </div>
     );
 }
 
