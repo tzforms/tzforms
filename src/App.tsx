@@ -25,6 +25,7 @@ import TezosContext from '~context/TezosContext';
 import BeaconContext from '~context/BeaconContext';
 
 const Home = lazy(() => import('./pages/Home'));
+const Builder = lazy(() => import('./pages/Builder'));
 
 let tezosRPC: string;
 let tezosNetwork: Network;
@@ -88,6 +89,7 @@ function App() {
                                 <Suspense fallback="Loading...">
                                     <Switch>
                                         <Route exact={true} path="/" component={Home} />
+                                        <Route exact={true} path="/builder" component={Builder} />
                                     </Switch>
                                 </Suspense>
                             </Layout.Content>

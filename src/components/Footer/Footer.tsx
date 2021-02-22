@@ -1,13 +1,13 @@
-import CodeFilled from '@ant-design/icons/CodeFilled';
-import GithubFilled from '@ant-design/icons/GithubFilled';
+import FileProtectOutlined from '@ant-design/icons/FileProtectOutlined';
+import FileSearchOutlined from '@ant-design/icons/FileSearchOutlined';
+import GithubOutlined from '@ant-design/icons/GithubOutlined';
 import HeartFilled from '@ant-design/icons/HeartFilled';
 import MailOutlined from '@ant-design/icons/MailOutlined';
 import Layout from 'antd/lib/layout';
-import Space from 'antd/lib/space';
 import Typography from 'antd/lib/typography';
 import RcFooter from 'rc-footer';
 import React from 'react';
-import { withRouter } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import tzformsNoSpaceWebp from '~assets/images/tzforms_no_space.webp';
 import { FooterProps } from './Footer.types';
 
@@ -19,15 +19,9 @@ function Footer(props: FooterProps) {
                     <RcFooter
                         columnLayout="space-between"
                         bottom={(
-                            <Space size="small">
-                                <Typography.Text type="secondary">
-                                    Made with
+                            <Typography.Text type="secondary">
+                                Made with <HeartFilled style={{ color: 'coral' }} />
                             </Typography.Text>
-                                <HeartFilled style={{ color: 'coral' }} />
-                                <Typography.Text type="secondary">
-                                    by <a href="https://github.com/matthewdowns">Matthew Downs</a>
-                                </Typography.Text>
-                            </Space>
                         )}
                         columns={[
                             {
@@ -49,10 +43,18 @@ function Footer(props: FooterProps) {
                                 title: 'Resources',
                                 items: [
                                     {
-                                        icon: <GithubFilled />,
-                                        title: 'Github',
+                                        icon: <GithubOutlined />,
+                                        title: 'Source',
                                         url: 'https://github.com/tzforms/tzforms',
                                         openExternal: true
+                                    },
+                                    {
+                                        icon: <FileSearchOutlined />,
+                                        title: <Link to="/terms">Terms</Link>
+                                    },
+                                    {
+                                        icon: <FileProtectOutlined />,
+                                        title: <Link to="/privacy">Privacy</Link>
                                     }
                                 ]
                             }

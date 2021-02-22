@@ -1,5 +1,5 @@
 import Typography from 'antd/lib/typography';
-import React, { Fragment } from 'react';
+import React from 'react';
 
 function Home() {
 
@@ -7,11 +7,12 @@ function Home() {
     return (
         <div className="tzf-banner">
             <div className="tzf-container tzf-pad">
-                <Typography.Title 
+                <Typography.Title
+                    className="tzf-text-center-sm"
                     style={{
                         color: '#333333',
                         fontWeight: 300,
-                        marginBottom: '4px'
+                        marginBottom: '0'
                     }}
                 >
                     Create incredible forms backed by smart contracts.

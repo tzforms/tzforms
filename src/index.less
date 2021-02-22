@@ -5,6 +5,7 @@ body {
 }
 
 .tzf {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -17,15 +18,25 @@ body {
     }
 
     > .tzf-content {
+        position: relative;
+        display: flex;
+        flex-direction: row;
         flex-grow: 1;
         background: #ffffff;
         padding: 0;
+        z-index: 0;
     }
 
     > .tzf-footer {
         flex-shrink: 1;
         background: #ffffff;
         padding: 0;
+        z-index: 1;
+    }
+
+    .tzf {
+        flex-direction: unset;
+        min-height: unset;
     }
 }
 
@@ -49,14 +60,14 @@ body {
 }
 
 .tzf-shadow {
-    box-shadow: 0 0 25px 5px #f2f2f2;
+    box-shadow: 0 0 5px 1px #f2f2f2;
 
     &-light {
-        box-shadow: 0 0 25px 5px #f5f5f5;
+        box-shadow: 0 0 5px 1px #f5f5f5;
     }
 
     &-dark {
-        box-shadow: 0 0 25px 5px #f0f0f0;
+        box-shadow: 0 0 5px 1px #f0f0f0;
     }
 }
 
@@ -67,4 +78,10 @@ body {
 .tzf-banner {
     padding-top: 80px;
     padding-bottom: 80px;
+}
+
+@media screen and (max-width: 768px) {
+    .tzf-text-center-sm {
+        text-align: center;
+    }
 }

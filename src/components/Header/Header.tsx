@@ -3,7 +3,6 @@ import Button from 'antd/lib/button';
 import Dropdown from 'antd/lib/dropdown';
 import Layout from 'antd/lib/layout';
 import Menu from 'antd/lib/menu';
-import Space from 'antd/lib/space';
 import Typography from 'antd/lib/typography';
 import React, {
     Fragment,
@@ -128,17 +127,20 @@ function Header(props: HeaderProps) {
         </Dropdown>
     );
 
+    const route = props.location.pathname.match(/([^\/]*)\/*$/);
+
     return (
         <Layout.Header className={props.className}>
             <div className="tzf-shadow-light">
                 <div className="tzf-container tzf-pad-x">
                     <Menu
                         mode="horizontal"
-                        selectedKeys={[]}
+                        selectedKeys={route ? [route[1]] : []}
                         style={{ borderBottom: 'none' }}
                         theme="light"
                     >
                         <Menu.Item
+                            key="brand"
                             style={{
                                 borderBottom: 'none',
                                 marginLeft: '0',
@@ -156,6 +158,7 @@ function Header(props: HeaderProps) {
                             />
                         </Menu.Item>
                         <Menu.Item
+                            key="wallet"
                             style={{
                                 borderBottom: 'none',
                                 cursor: 'default',
@@ -164,6 +167,16 @@ function Header(props: HeaderProps) {
                             }}
                         >
                             {beacon.wallet ? disconnectButton() : connectButton()}
+                        </Menu.Item>
+                        <Menu.Item
+                            key="builder"
+                            style={{
+                                borderBottom: 'none',
+                                float: 'right'
+                            }}
+                            onClick={() => props.history.push('/builder')}
+                        >
+                            Builder
                         </Menu.Item>
                     </Menu>
                 </div>
