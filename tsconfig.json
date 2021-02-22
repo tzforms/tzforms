@@ -12,7 +12,11 @@
     "strict": true,
     "moduleResolution": "node",
     "baseUrl": "./",
-    "paths": {},
+    "paths": {
+      "~assets/*": ["./src/assets/*"],
+      "~components/*": ["./src/components/*"],
+      "~context/*": ["./src/context/*"]
+    },
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,

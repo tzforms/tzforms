@@ -4,6 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { join, resolve } = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const { TsconfigPathsPlugin } = require('tsconfig-paths-webpack-plugin');
+const { DefinePlugin, ProvidePlugin } = require('webpack');
 const { dependencies } = require('./package.json');
 
 const nodeModulesPath = resolve(__dirname, './node_modules');
@@ -28,13 +29,19 @@ module.exports = (env, argv) => {
             rules: [
                 {
                     test: /\.tsx?$/,
-                    exclude: [/node_modules/],
-                    use: {
-                        loader: 'ts-loader',
-                        options: {
-                            configFile: tsconfigPath
+                    use: [
+                        {
+                            loader: 'ts-loader',
+                            options: isProd ? {
+                                compilerOptions: {
+                                    declaration: false,
+                                    declarationMap: false,
+                                    sourceMap: false,
+                                    removeComments: true
+                                }
+                            } : undefined
                         }
-                    }
+                    ]
                 },
                 {
                     test: /\.less$/,
@@ -55,6 +62,12 @@ module.exports = (env, argv) => {
         },
         plugins: [
             new CleanPlugin(),
+            new DefinePlugin({
+                ENVIRONMENT: JSON.stringify(env.NODE_ENV)
+            }),
+            new ProvidePlugin({
+                Buffer: ['buffer', 'Buffer']
+            }),
             new HtmlPlugin({
                 template: join(srcPath, 'index.ejs'),
                 templateParameters: {
@@ -63,6 +76,9 @@ module.exports = (env, argv) => {
                     cdnReactDom: `https://unpkg.com/react-dom@${dependencies['react-dom'].match(/(\d+\.?)+/g)[0]}/umd/react-dom${isProd ? '.production.min' : '.development'}.js`,
                     cdnReactRouterDom: `https://unpkg.com/react-router-dom@${dependencies['react-router-dom'].match(/(\d+\.?)+/g)[0]}/umd/react-router-dom${isProd ? '.min' : ''}.js`
                 }
+            }),
+            new MiniCssExtractPlugin({
+                filename: isProd ? '[name].[chunkhash].css' : '[name].css'
             })
         ],
         resolve: {
@@ -73,7 +89,16 @@ module.exports = (env, argv) => {
             ],
             plugins: [
                 new TsconfigPathsPlugin()
-            ]
+            ],
+            fallback: {
+                'buffer': require.resolve('buffer'),
+                'crypto': require.resolve('crypto-browserify'),
+                'os': require.resolve('os-browserify/browser'),
+                'http': require.resolve('stream-http'),
+                'https': require.resolve('https-browserify'),
+                'path': require.resolve('path-browserify'),
+                'stream': require.resolve('stream-browserify')
+            }
         },
         externals: {
             'antd': 'antd',
