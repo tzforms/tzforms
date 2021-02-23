@@ -10,6 +10,7 @@ import {
     ContractProvider,
     TezosToolkit
 } from '@taquito/taquito';
+import { TezBridgeSigner } from '@taquito/tezbridge-signer';
 import ConfigProvider from 'antd/lib/config-provider';
 import Layout from 'antd/lib/layout';
 import enUS from 'antd/lib/locale/en_US';
@@ -47,21 +48,29 @@ switch(TZFORMS_ENVIRONMENT) {
         break;
 }
 
-const wallet = new BeaconWallet({
-    name: 'tzforms',
-    disableDefaultEvents: true,
-    eventHandlers: {
-        PAIR_INIT: {
-            handler: defaultEventCallbacks.PAIR_INIT
-        },
-        PAIR_SUCCESS: {
-            handler: defaultEventCallbacks.PAIR_SUCCESS
+function createWallet() {
+    return new BeaconWallet({
+        name: 'tzforms',
+        disableDefaultEvents: true,
+        eventHandlers: {
+            PAIR_INIT: {
+                handler: defaultEventCallbacks.PAIR_INIT
+            },
+            PAIR_SUCCESS: {
+                handler: defaultEventCallbacks.PAIR_SUCCESS
+            }
         }
-    }
+    });
+}
+
+const tezos = new TezosToolkit(tezosRPC);
+let wallet = createWallet();
+tezos.setProvider({
+    wallet,
+    signer: new TezBridgeSigner()
 });
 
 function App() {
-    const tezos = new TezosToolkit(tezosRPC);
     const [contract, setContract] = useState<ContractAbstraction<ContractProvider>>();
     const [contractFetching, setContractFetching] = useState<boolean>(false);
     const [contractError, setContractError] = useState<boolean>();
@@ -91,14 +100,14 @@ function App() {
                                     network: tezosNetwork,
                                     scopes: [PermissionScope.OPERATION_REQUEST, PermissionScope.SIGN]
                                 });
-                                tezos.setWalletProvider(wallet);
                                 message.success('Wallet connected.');
                             }
                         },
                         disconnect: async () => {
                             if (tezos && wallet) {
                                 await wallet.disconnect();
-                                tezos.setWalletProvider(undefined);
+                                wallet = createWallet();
+                                tezos.setWalletProvider(wallet);
                                 message.info('Wallet disconnected.');
                             }
                         }

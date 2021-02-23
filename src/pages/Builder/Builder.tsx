@@ -209,6 +209,7 @@ function Builder(props: BuilderProps) {
                 collapsible={true}
                 theme="light"
                 trigger={null}
+                style={{ transition: 'none' }}
                 width={320}
             >
                 <div

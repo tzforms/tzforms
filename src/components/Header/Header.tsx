@@ -26,21 +26,27 @@ function Header(props: HeaderProps) {
 
     const [connectingWallet, setConnectingWallet] = useState<boolean>(false);
     const [disconnectingWallet, setDisconnectingWallet] = useState<boolean>(false);
-    const [walletMenuVisible, setWalletMenuVisible] = useState<boolean>(false);
+
     const [walletActiveAccount, setWalletActiveAccount] = useState<AccountInfo>();
     const [walletActiveAccountFetching, setWalletActiveAccountFetching] = useState<boolean>(false);
     const [walletActiveAccountError, setWalletActiveAccountError] = useState<string>();
 
-    useEffect(() => {
-        if (beacon) {
-            if (!walletActiveAccount && !walletActiveAccountFetching && !walletActiveAccountError) {
-                beacon.wallet.client.getActiveAccount()
-                    .then(value => setWalletActiveAccount(value))
-                    .catch(() => setWalletActiveAccountError('Failed to get active account.'))
-                    .finally(() => setWalletActiveAccountFetching(false));
-            }
+    const [walletMenuVisible, setWalletMenuVisible] = useState<boolean>(false);
+
+    function initWalletActiveAccount() {
+        if (beacon && !walletActiveAccount && !walletActiveAccountFetching && !walletActiveAccountError) {
+            beacon.wallet.client.getActiveAccount()
+                .then(value => setWalletActiveAccount(value))
+                .catch(() => setWalletActiveAccountError('Failed to get active account.'))
+                .finally(() => setWalletActiveAccountFetching(false));
         }
-    }, [beacon]);
+    }
+
+    useEffect(() => {
+        if (!connectingWallet) {
+            initWalletActiveAccount();
+        }
+    }, [connectingWallet]);
 
     const connectButton = () => (
         <Button
@@ -51,7 +57,7 @@ function Header(props: HeaderProps) {
             size="large"
             type="ghost"
             onClick={async () => {
-                if (beacon && beacon.wallet.client.connectionStatus === TransportStatus.NOT_CONNECTED) {
+                if (beacon) {
                     setConnectingWallet(true);
                     try {
                         await beacon.connect();
