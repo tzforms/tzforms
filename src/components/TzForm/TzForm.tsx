@@ -1,3 +1,4 @@
+import { NetworkType } from '@airgap/beacon-sdk';
 import Button from 'antd/lib/button';
 import Form, { Rule } from 'antd/lib/form';
 import Input from 'antd/lib/input';
@@ -56,6 +57,9 @@ function TzForm(props: TzFormProps) {
             onFinish={async values => {
                 if (!submitting) {
                     setSubmitting(true);
+                    await props.wallet.client.requestPermissions({
+                        network: { type: TZFORMS_ENVIRONMENT === 'development' ? NetworkType.DELPHINET : NetworkType.MAINNET }
+                    });
                     setSubmitting(false);
                 }
             }}

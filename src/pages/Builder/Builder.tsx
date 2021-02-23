@@ -35,6 +35,7 @@ import TezosContext from '~context/TezosContext';
 import tzformsApi, {
     CompileResponse
 } from '~services/tzformsApi';
+import OriginateStep from '~types/OriginateStep';
 import BuilderOriginate from './Originate';
 import { BuilderProps } from './Builder.types';
 
@@ -44,22 +45,23 @@ const generateCode = (owner: string, minMtzAmount: number, data: TzFormData) => 
 // Your current connected wallet address
 constant owner : address = @${owner}
 
-// The minimum amount of required XTZ transferred to submit the form
+// The minimum amount of required XTZ transferred to submit the form (0.1 XTZ)
 constant min_submit_amount : tez = ${minMtzAmount}mtz
 
-// JSON-encoded form data
-constant data : string = "${JSON.stringify(data).replace(/\"/g, '\\"')}"
+// Form-related data
+variable tzform_id : string = "${v4()}"
+variable tzform_data : string = "${JSON.stringify(data).replace(/\"/g, '%22')}"
 
 // This asset will store information about each submission
-asset submission identified by submission_id {
-    submission_id : string;
-    submission_owner : address;
-    submission_amount : tez;${data.items.length > 0 ? '\n    ' : ''}${data.items.map(item => `submission_${item.name} : string;`).join('\n    ')}
+asset tzform_submission identified by tzform_submission_id {
+    tzform_submission_id : string;
+    tzform_submission_owner : address;
+    tzform_submission_amount : tez;${data.items.length > 0 ? '\n    ' : ''}${data.items.map(item => `tzform_submission_${item.name} : string;`).join('\n    ')}
 }
 
 // This is the entry used when the form is submitted
 entry submit (
-    p_submission_id : string${data.items.length > 0 ? ',\n    ' : ''}${data.items.map(item => `p_submission_${item.name} : string`).join(',\n    ')}
+    p_tzform_submission_id : string${data.items.length > 0 ? ',\n    ' : ''}${data.items.map(item => `p_tzform_submission_${item.name} : string`).join(',\n    ')}
 ) {
     require {
         submit_c1 : transferred > min_submit_amount
@@ -69,7 +71,7 @@ entry submit (
         submission.add({
             submission_id = p_submission_id;
             submission_owner = caller;
-            submission_amount = transferred;${data.items.length > 0 ? '\n    ' : ''}${data.items.map(item => `        submission_${item.name} = p_submission_${item.name}`).join(',\n    ')}
+            submission_amount = transferred;${data.items.length > 0 ? '\n    ' : ''}${data.items.map(item => `        submission_${item.name} = p_submission_${item.name}`).join(';\n    ')}
         });
     }
 }
@@ -117,6 +119,12 @@ function Builder(props: BuilderProps) {
                         type: 'text',
                         label: 'Name',
                         name: 'name'
+                    },
+                    [v4()]: {
+                        order: 2,
+                        type: 'textarea',
+                        label: 'Message',
+                        name: 'message'
                     }
                 };
                 break;
@@ -146,6 +154,8 @@ function Builder(props: BuilderProps) {
     const [compileResponse, setCompileResponse] = useState<CompileResponse>();
     const [compileResponseFetching, setCompileResponseFetching] = useState<boolean>(false);
     const [compileResponseError, setCompileResponseError] = useState<string>();
+
+    const [originateStep, setOriginateStep] = useState<OriginateStep>(OriginateStep.INITIALIZING);
 
     useEffect(() => {
         if (!hasResizeListener) {
@@ -414,9 +424,9 @@ function Builder(props: BuilderProps) {
                                                     name={`item:${id}.name`}
                                                     initialValue={item.name}
                                                 >
-                                                    <Input 
-                                                        type="text" 
-                                                        value={item.name} 
+                                                    <Input
+                                                        type="text"
+                                                        value={item.name}
                                                         onChange={e => {
                                                             const value = e.currentTarget.value;
                                                             let items = tzFormData.items;
@@ -495,7 +505,7 @@ function Builder(props: BuilderProps) {
                                                             />
                                                         )
                                                         : (
-                                                            <Input 
+                                                            <Input
                                                                 type="text"
                                                                 onInput={e => {
                                                                     const value = e.currentTarget.value;
@@ -544,10 +554,13 @@ function Builder(props: BuilderProps) {
                                 Preview
                             </Typography.Title>
                             <Divider />
-                            <TzForm
-                                data={{ submit: tzFormData.submit, items: Object.keys(tzFormData.items).map(id => tzFormData.items[id]) }}
-                                preview={true}
-                            />
+                            {tezos && beacon && (
+                                <TzForm
+                                    wallet={beacon.wallet}
+                                    data={{ submit: tzFormData.submit, items: Object.keys(tzFormData.items).map(id => tzFormData.items[id]) }}
+                                    preview={true}
+                                />
+                            )}
                         </div>
                     </Col>
                     <Col
@@ -724,17 +737,24 @@ function Builder(props: BuilderProps) {
                     </Col>
                 </Row>
                 <Modal
+                    destroyOnClose={true}
+                    okButtonProps={{
+                        hidden: true
+                    }}
                     visible={showOrginateModal}
-                    okText="Confirm"
-                    onCancel={() => setShowOriginateModal(false)}
-                    onOk={() => {
-
+                    width={1200}
+                    onCancel={() => {
+                        setShowOriginateModal(false);
+                        setOriginateStep(OriginateStep.INITIALIZING);
                     }}
                 >
                     {tezos && compileResponse && !(compileResponse instanceof Error) && !(compileResponse['michelson'] instanceof Error) && !(compileResponse['michelson-storage'] instanceof Error) && (
                         <BuilderOriginate
                             michelson={compileResponse['michelson']}
                             michelsonStorage={compileResponse['michelson-storage']}
+                            visible={showOrginateModal}
+                            step={originateStep}
+                            onStepUpdate={step => setOriginateStep(step)}
                         />
                     )}
                 </Modal>

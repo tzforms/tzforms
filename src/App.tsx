@@ -40,11 +40,11 @@ let tezosNetwork: Network;
 switch(TZFORMS_ENVIRONMENT) {
     case 'development':
         tezosNetwork = { type: NetworkType.DELPHINET };
-        tezosRPC = 'https://testnet-tezos.giganode.io';
+        tezosRPC = 'https://api.tez.ie/rpc/delphinet';
         break;
     case 'production':
         tezosNetwork = { type: NetworkType.MAINNET };
-        tezosRPC = 'https://mainnet-tezos.giganode.io';
+        tezosRPC = 'https://api.tez.ie/rpc/mainnet';
         break;
 }
 

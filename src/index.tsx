@@ -1,17 +1,19 @@
 import React from 'react';
 import { render } from 'react-dom';
-import TzForm from '~components/TzForm';
 import App from './App';
+import Form from './Form';
 import './index.less';
 
 const hostSplit = window.location.host.split('.');
-if (hostSplit.length > 1) {
-    const subdomain = hostSplit[0];
-
-    render(
-        <p>TODO: load form</p>,
-        document.getElementById('root')
-    );
+if (hostSplit.length > 1 && hostSplit[0] === 'form') {
+    const path = window.location.pathname.split('/');
+    if (path.length > 0 && path[1]) {
+        const contractAddress = path[1];
+        render(
+            <Form contractAddress={contractAddress} />,
+            document.getElementById('root')
+        );
+    }
 } else {
     render(
         <App />,

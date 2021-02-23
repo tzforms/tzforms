@@ -1,3 +1,6 @@
+import { BeaconWallet } from '@taquito/beacon-wallet';
+import { TezosToolkit } from '@taquito/taquito';
+
 export interface TzFormSubmit {
     text: string;
     block: boolean;
@@ -21,6 +24,7 @@ export interface TzFormData {
 }
 
 export interface TzFormProps {
+    wallet: BeaconWallet;
     data: TzFormData;
     preview?: boolean;
 }
