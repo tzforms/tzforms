@@ -262,8 +262,11 @@ function BuilderOriginate(props: BuilderOriginateProps) {
             )}
             {props.step === OriginateStep.CONFIRMED && originationOperation && confirmed && (
                 <Typography.Paragraph>
-                    Your contract has been originated. You can view your deployed form at <Typography.Link copyable={true} href={`https://form.tzforms.com/${originationOperation.contractAddress}`}>
-                        form.tzforms.com/{originationOperation.contractAddress}
+                    Your contract has been originated. You can view your deployed form at <Typography.Link 
+                        copyable={true} 
+                        href={`${TZFORMS_ENVIRONMENT === 'development' ? 'http://localhost:8080' : 'https://form.tzforms.com'}/${originationOperation.contractAddress}`}
+                    >
+                        {TZFORMS_ENVIRONMENT === 'development' ? 'http://localhost:8080' : 'https://form.tzforms.com'}/{originationOperation.contractAddress}
                     </Typography.Link>. View our <Link to="/articles/embed-your-form">article</Link> on how to embed the form in your website.
                 </Typography.Paragraph>
             )}
