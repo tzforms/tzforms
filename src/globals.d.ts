@@ -1,4 +1,6 @@
-declare const ENVIRONMENT: 'development' | 'production';
+declare const TZFORMS_ENVIRONMENT: 'development' | 'production';
+declare const TZFORMS_CONTRACT_ADDRESS: string;
+declare const TZFORMS_API_URL: string;
 
 declare module '*.gif';
 declare module '*.jpg';

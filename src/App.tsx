@@ -1,10 +1,15 @@
 import {
     defaultEventCallbacks,
     Network,
-    NetworkType
+    NetworkType,
+    PermissionScope
 } from '@airgap/beacon-sdk';
 import { BeaconWallet } from '@taquito/beacon-wallet';
-import { TezosToolkit } from '@taquito/taquito';
+import {
+    ContractAbstraction,
+    ContractProvider,
+    TezosToolkit
+} from '@taquito/taquito';
 import ConfigProvider from 'antd/lib/config-provider';
 import Layout from 'antd/lib/layout';
 import enUS from 'antd/lib/locale/en_US';
@@ -12,6 +17,7 @@ import message from 'antd/lib/message';
 import React, {
     lazy,
     Suspense,
+    useEffect,
     useState
 } from 'react';
 import {
@@ -26,23 +32,49 @@ import BeaconContext from '~context/BeaconContext';
 
 const Home = lazy(() => import('./pages/Home'));
 const Builder = lazy(() => import('./pages/Builder'));
+const Templates = lazy(() => import('./pages/Templates'));
 
 let tezosRPC: string;
 let tezosNetwork: Network;
-switch(ENVIRONMENT) {
+switch(TZFORMS_ENVIRONMENT) {
     case 'development':
         tezosNetwork = { type: NetworkType.DELPHINET };
-        tezosRPC = 'https://mainnet-tezos.giganode.io';
+        tezosRPC = 'https://testnet-tezos.giganode.io';
         break;
     case 'production':
         tezosNetwork = { type: NetworkType.MAINNET };
-        tezosRPC = 'https://testnet-tezos.giganode.io';
+        tezosRPC = 'https://mainnet-tezos.giganode.io';
         break;
 }
 
+const wallet = new BeaconWallet({
+    name: 'tzforms',
+    disableDefaultEvents: true,
+    eventHandlers: {
+        PAIR_INIT: {
+            handler: defaultEventCallbacks.PAIR_INIT
+        },
+        PAIR_SUCCESS: {
+            handler: defaultEventCallbacks.PAIR_SUCCESS
+        }
+    }
+});
+
 function App() {
     const tezos = new TezosToolkit(tezosRPC);
-    const [wallet, setWallet] = useState<BeaconWallet>();
+    const [contract, setContract] = useState<ContractAbstraction<ContractProvider>>();
+    const [contractFetching, setContractFetching] = useState<boolean>(false);
+    const [contractError, setContractError] = useState<boolean>();
+    
+    useEffect(() => {
+        if (!contract && !contractFetching && !contractError) {
+            setContractFetching(true);
+            tezos.contract.at(TZFORMS_CONTRACT_ADDRESS)
+                .then(_contract => setContract(_contract))
+                .catch(() => setContractError(true))
+                .finally(() => setContractFetching(true))
+        }
+    })
 
     return (
         <BrowserRouter>
@@ -55,31 +87,19 @@ function App() {
                         wallet,
                         connect: async () => {
                             if (tezos) {
-                                const wallet = new BeaconWallet({
-                                    name: 'tzforms',
-                                    disableDefaultEvents: true,
-                                    eventHandlers: {
-                                        PAIR_INIT: {
-                                            handler: defaultEventCallbacks.PAIR_INIT
-                                        },
-                                        PAIR_SUCCESS: {
-                                            handler: defaultEventCallbacks.PAIR_SUCCESS
-                                        }
-                                    }
-                                });
                                 await wallet.requestPermissions({
-                                    network: tezosNetwork
+                                    network: tezosNetwork,
+                                    scopes: [PermissionScope.OPERATION_REQUEST, PermissionScope.SIGN]
                                 });
-                                message.success('Wallet connected.');
-                                setWallet(wallet);
                                 tezos.setWalletProvider(wallet);
+                                message.success('Wallet connected.');
                             }
                         },
                         disconnect: async () => {
-                            if (wallet) {
+                            if (tezos && wallet) {
                                 await wallet.disconnect();
+                                tezos.setWalletProvider(undefined);
                                 message.info('Wallet disconnected.');
-                                setWallet(undefined);
                             }
                         }
                     }}>
@@ -90,6 +110,7 @@ function App() {
                                     <Switch>
                                         <Route exact={true} path="/" component={Home} />
                                         <Route exact={true} path="/builder" component={Builder} />
+                                        <Route exact={true} path="/templates" component={Templates} />
                                     </Switch>
                                 </Suspense>
                             </Layout.Content>

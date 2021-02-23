@@ -41,6 +41,7 @@ body {
 }
 
 .tzf-container {
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -71,17 +72,38 @@ body {
     }
 }
 
+.tzf-border {
+    border: 1px solid #f2f2f2;
+
+    &-bottom {
+        border-bottom: 1px solid #f2f2f2;
+    }
+
+    &-right {
+        border-right: 1px solid #f2f2f2;
+    }
+}
+
 .tzf-border-none {
     border: none;
 }
 
 .tzf-banner {
+    width: 100%;
     padding-top: 80px;
     padding-bottom: 80px;
+}
+
+.tzf-border-radius-round {
+    border-radius: 20px;
 }
 
 @media screen and (max-width: 768px) {
     .tzf-text-center-sm {
         text-align: center;
+    }
+
+    .tzf-justify-content-center-sm {
+        justify-content: center;
     }
 }

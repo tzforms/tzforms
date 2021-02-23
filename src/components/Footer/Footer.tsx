@@ -50,11 +50,13 @@ function Footer(props: FooterProps) {
                                     },
                                     {
                                         icon: <FileSearchOutlined />,
-                                        title: <Link to="/terms">Terms</Link>
+                                        title: <Link to="/terms">Terms</Link>,
+                                        LinkComponent: 'span'
                                     },
                                     {
                                         icon: <FileProtectOutlined />,
-                                        title: <Link to="/privacy">Privacy</Link>
+                                        title: <Link to="/privacy">Privacy</Link>,
+                                        LinkComponent: 'span'
                                     }
                                 ]
                             }

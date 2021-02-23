@@ -1,4 +1,7 @@
-import { AccountInfo } from '@airgap/beacon-sdk';
+import {
+    AccountInfo,
+    TransportStatus
+} from '@airgap/beacon-sdk';
 import Button from 'antd/lib/button';
 import Dropdown from 'antd/lib/dropdown';
 import Layout from 'antd/lib/layout';
@@ -29,7 +32,7 @@ function Header(props: HeaderProps) {
     const [walletActiveAccountError, setWalletActiveAccountError] = useState<string>();
 
     useEffect(() => {
-        if (beacon.wallet) {
+        if (beacon) {
             if (!walletActiveAccount && !walletActiveAccountFetching && !walletActiveAccountError) {
                 beacon.wallet.client.getActiveAccount()
                     .then(value => setWalletActiveAccount(value))
@@ -37,18 +40,18 @@ function Header(props: HeaderProps) {
                     .finally(() => setWalletActiveAccountFetching(false));
             }
         }
-    }, [beacon.wallet]);
+    }, [beacon]);
 
     const connectButton = () => (
         <Button
             className="tzf-shadow-dark tzf-border-none"
-            disabled={!beacon.connect}
+            disabled={!beacon}
             loading={connectingWallet}
             shape="round"
             size="large"
             type="ghost"
             onClick={async () => {
-                if (!beacon.wallet && beacon.connect) {
+                if (beacon && beacon.wallet.client.connectionStatus === TransportStatus.NOT_CONNECTED) {
                     setConnectingWallet(true);
                     try {
                         await beacon.connect();
@@ -63,6 +66,7 @@ function Header(props: HeaderProps) {
 
     const disconnectButton = () => (
         <Dropdown
+            disabled={!beacon}
             overlay={(
                 <Menu
                     onClick={e => {
@@ -73,7 +77,7 @@ function Header(props: HeaderProps) {
                         disabled={disconnectingWallet}
                         key="disconnect-wallet"
                         onClick={async () => {
-                            if (beacon.wallet && beacon.disconnect) {
+                            if (beacon) {
                                 setDisconnectingWallet(true);
                                 await sleep(1000);
                                 await beacon.disconnect();
@@ -96,7 +100,7 @@ function Header(props: HeaderProps) {
                 size="large"
                 type="ghost"
             >
-                {beacon.wallet && walletActiveAccount && (
+                {beacon && walletActiveAccount && (
                     <Fragment>
                         <Typography.Text
                             strong={true}
@@ -109,7 +113,7 @@ function Header(props: HeaderProps) {
                             type="success"
                         >
                             &middot;
-                                        </Typography.Text>
+                        </Typography.Text>
                         <Typography.Text
                             style={{
                                 fontSize: '0.85rem',
@@ -166,7 +170,11 @@ function Header(props: HeaderProps) {
                                 marginRight: '0'
                             }}
                         >
-                            {beacon.wallet ? disconnectButton() : connectButton()}
+                            {beacon && (
+                                !walletActiveAccount
+                                    ? connectButton() 
+                                    : disconnectButton()
+                            )}
                         </Menu.Item>
                         <Menu.Item
                             key="builder"
@@ -174,9 +182,23 @@ function Header(props: HeaderProps) {
                                 borderBottom: 'none',
                                 float: 'right'
                             }}
-                            onClick={() => props.history.push('/builder')}
+                            onClick={() => {
+                                if (route) {
+                                    if (!route[1].includes('builder')) props.history.push('/builder');
+                                } else props.history.push('/builder');
+                            }}
                         >
                             Builder
+                        </Menu.Item>
+                        <Menu.Item
+                            key="templates"
+                            style={{
+                                borderBottom: 'none',
+                                float: 'right'
+                            }}
+                            onClick={() => props.history.push('/templates')}
+                        >
+                            Templates
                         </Menu.Item>
                     </Menu>
                 </div>

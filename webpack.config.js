@@ -10,6 +10,8 @@ const {
     ProvidePlugin
 } = require('webpack');
 
+const contractAddress = 'KT1P6Lv98csaT9bAor6DLD1qDkpHKQCaKGk5';
+
 const nodeModulesPath = resolve(__dirname, './node_modules');
 const srcPath = resolve(__dirname, './src');
 const distPath = resolve(__dirname, './dist');
@@ -79,7 +81,9 @@ module.exports = (env) => {
         plugins: [
             new CleanPlugin(),
             new DefinePlugin({
-                ENVIRONMENT: JSON.stringify(isProd ? 'production' : 'development')
+                TZFORMS_ENVIRONMENT: JSON.stringify(isProd ? 'production' : 'development'),
+                TZFORMS_CONTRACT_ADDRESS: JSON.stringify(contractAddress),
+                TZFORMS_API_URL: JSON.stringify(isProd ? 'https://api.tzforms.com' : 'http://localhost:8081')
             }),
             new ProvidePlugin({
                 Buffer: ['buffer', 'Buffer']
@@ -147,6 +151,7 @@ module.exports = (env) => {
         devtool: 'source-map',
         devServer: {
             contentBase: '/',
+            disableHostCheck: true,
             historyApiFallback: true,
             port: 8080,
             publicPath: '/'

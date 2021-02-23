@@ -16,6 +16,8 @@
       "~assets/*": ["./src/assets/*"],
       "~components/*": ["./src/components/*"],
       "~context/*": ["./src/context/*"],
+      "~services/*": ["./src/services/*"],
+      "~types/*": ["./src/types/*"],
       "~utilities/*": ["./src/utilities/*"]
     },
     "esModuleInterop": true,
