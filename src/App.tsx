@@ -30,6 +30,7 @@ import Footer from '~components/Footer';
 import Header from '~components/Header';
 import TezosContext from '~context/TezosContext';
 import BeaconContext from '~context/BeaconContext';
+import createWallet from '~utilities/createWallet';
 
 const Home = lazy(() => import('./pages/Home'));
 const Builder = lazy(() => import('./pages/Builder'));
@@ -46,21 +47,6 @@ switch(TZFORMS_ENVIRONMENT) {
         tezosNetwork = { type: NetworkType.MAINNET };
         tezosRPC = 'https://api.tez.ie/rpc/mainnet';
         break;
-}
-
-function createWallet() {
-    return new BeaconWallet({
-        name: 'tzforms',
-        disableDefaultEvents: true,
-        eventHandlers: {
-            PAIR_INIT: {
-                handler: defaultEventCallbacks.PAIR_INIT
-            },
-            PAIR_SUCCESS: {
-                handler: defaultEventCallbacks.PAIR_SUCCESS
-            }
-        }
-    });
 }
 
 const tezos = new TezosToolkit(tezosRPC);
