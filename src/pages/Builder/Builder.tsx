@@ -46,7 +46,7 @@ const generateCode = (owner: string, fee: number, data: TzFormData) => {
 // Your current connected wallet address
 variable owner : address = @${owner}
 
-// Our wallet address where fees will be sent to
+// Our wallet address where optional fees will be sent to
 variable handler : address = @${TZFORMS_HANDLER_ADDRESS}
 
 // Form-related data
@@ -69,6 +69,12 @@ entry submit (
 ) {
     effect {
         transfer tzform_fee to handler;
+
+        tzform_submission.add({
+            tzform_submission_id = p_tzform_submission_id;
+            tzform_submission_owner = caller;
+            tzform_submission_amount = transferred${data.items.length > 0 ? ';\n    ' : ''}${data.items.map(item => `        tzform_submission_${item.name} = p_tzform_submission_${item.name}`).join(';\n    ')}
+        });
     }
 }
 

@@ -83,8 +83,8 @@ module.exports = (env) => {
             new CleanPlugin(),
             new DefinePlugin({
                 TZFORMS_ENVIRONMENT: JSON.stringify(isProd ? 'production' : 'development'),
-                TZFORMS_HANDLER_ADDRESS: JSON.stringify(isProd ? delphinetHandlerAddress : mainnetHandlerAddress),
-                TZFORMS_API_URL: JSON.stringify(isProd ? 'https://api.tzforms.com' : 'http://localhost:8081')
+                TZFORMS_HANDLER_ADDRESS: JSON.stringify(isProd ? mainnetHandlerAddress : delphinetHandlerAddress),
+                TZFORMS_API_URL: JSON.stringify('http://127.0.0.1:8081')
             }),
             new ProvidePlugin({
                 Buffer: ['buffer', 'Buffer']
