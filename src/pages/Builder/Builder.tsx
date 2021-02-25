@@ -15,6 +15,7 @@ import Layout from 'antd/lib/layout';
 import Modal from 'antd/lib/modal';
 import Row from 'antd/lib/row';
 import Select from 'antd/lib/select';
+import Slider from 'antd/lib/slider';
 import Space from 'antd/lib/space';
 import Tabs from 'antd/lib/tabs';
 import Typography from 'antd/lib/typography';
@@ -39,49 +40,52 @@ import OriginateStep from '~types/OriginateStep';
 import BuilderOriginate from './Originate';
 import { BuilderProps } from './Builder.types';
 
-const generateCode = (owner: string, minMtzAmount: number, data: TzFormData) => {
+const generateCode = (owner: string, fee: number, data: TzFormData) => {
     return `archetype tzform
 
 // Your current connected wallet address
-constant owner : address = @${owner}
+variable owner : address = @${owner}
 
-// The minimum amount of required XTZ transferred to submit the form (0.1 XTZ)
-constant min_submit_amount : tez = ${minMtzAmount}mtz
+// Our wallet address where fees will be sent to
+variable handler : address = @${TZFORMS_HANDLER_ADDRESS}
 
 // Form-related data
 variable tzform_id : string = "${v4()}"
 variable tzform_data : string = "${JSON.stringify(data).replace(/\"/g, '%22')}"
 
+// How much of the submission transferred amount will be transferred to the handler
+variable tzform_fee : tez = ${fee * 1000}mtz
+
 // This asset will store information about each submission
 asset tzform_submission identified by tzform_submission_id {
     tzform_submission_id : string;
     tzform_submission_owner : address;
-    tzform_submission_amount : tez;${data.items.length > 0 ? '\n    ' : ''}${data.items.map(item => `tzform_submission_${item.name} : string;`).join('\n    ')}
+    tzform_submission_amount : tez${data.items.length > 0 ? ';\n    ' : ''}${data.items.map(item => `tzform_submission_${item.name} : string`).join(';\n    ')}
 }
 
 // This is the entry used when the form is submitted
 entry submit (
     p_tzform_submission_id : string${data.items.length > 0 ? ',\n    ' : ''}${data.items.map(item => `p_tzform_submission_${item.name} : string`).join(',\n    ')}
 ) {
-    require {
-        submit_c1 : transferred > min_submit_amount
-    }
-
     effect {
-        submission.add({
-            submission_id = p_submission_id;
-            submission_owner = caller;
-            submission_amount = transferred;${data.items.length > 0 ? '\n    ' : ''}${data.items.map(item => `        submission_${item.name} = p_submission_${item.name}`).join(';\n    ')}
-        });
+        transfer tzform_fee to handler;
     }
 }
 
-// This is how you will claim the XTZ sent to this contract
-entry withdraw () {
+// This is how you will change the owner address if you ever need to.
+entry change_owner (new_owner : address) {
     called by owner
 
     effect {
-        transfer balance to owner;
+        owner := new_owner
+    }
+}
+
+entry change_handler (new_handler : address) {
+    called by handler
+
+    effect {
+        handler := new_handler
     }
 }
 `;
@@ -132,6 +136,7 @@ function Builder(props: BuilderProps) {
     }
 
     const [formSubmitButton] = Form.useForm<TzFormSubmit>();
+    const [submissionFee, setSubmissionFee] = useState<number>(0);
     const [tzFormData, setTzFormData] = useState<{
         submit: TzFormSubmit;
         items: { [id: string]: TzFormItem }
@@ -182,29 +187,41 @@ function Builder(props: BuilderProps) {
         }
 
         if (!code && walletActiveAccount) {
-            setCode(generateCode(walletActiveAccount.address, 100000, { submit: tzFormData.submit, items: Object.keys(tzFormData.items).map(id => tzFormData.items[id]) }));
+            setCode(generateCode(walletActiveAccount.address, submissionFee, {
+                submit: tzFormData.submit, 
+                items: Object.keys(tzFormData.items).map(id => tzFormData.items[id]) 
+            }));
         }
     }, [beacon, walletActiveAccount]);
 
     useEffect(() => {
         if (walletActiveAccount) {
-            setCode(generateCode(walletActiveAccount.address, 100000, { submit: tzFormData.submit, items: Object.keys(tzFormData.items).map(id => tzFormData.items[id]) }));
+            setCode(generateCode(walletActiveAccount.address, submissionFee, {
+                submit: tzFormData.submit, 
+                items: Object.keys(tzFormData.items).map(id => tzFormData.items[id]) 
+            }));
         }
     }, [tzFormData])
 
-    useEffect(() => {
+    async function compileCode() {
         if (code && walletActiveAccount && !compileResponseFetching) {
             // check if code is valid first
             const isValid = Object.keys(tzFormData.items).map(id => tzFormData.items[id]).every(item => item.name.length > 0);
             if (isValid) {
                 setCompileResponseError(undefined);
                 setCompileResponseFetching(true);
-                tzformsApi.compile(code)
-                    .then(value => setCompileResponse(value))
-                    .catch(reason => console.log(reason))
-                    .finally(() => setCompileResponseFetching(false));
+                try {
+                    const result = await tzformsApi.compile(code);
+                    setCompileResponse(result);
+                } catch(e) {
+                    setCompileResponseError('Failed to compile code.');
+                }
+                setCompileResponseFetching(false);
             }
         }
+    }
+    useEffect(() => {
+        compileCode();
     }, [code]);
 
     return (
@@ -265,6 +282,31 @@ function Builder(props: BuilderProps) {
                                 items: tzFormData.items
                             })}
                         >
+                            <Typography.Paragraph strong={true} style={{ marginBottom: '0' }}>
+                                Submission Fee
+                            </Typography.Paragraph>
+                            <Typography.Paragraph type="secondary" style={{ fontSize: '0.85rem' }}>
+                                Fee taken from the amount sent on each form submission. Set what you think is fair.
+                            </Typography.Paragraph>
+                            <Form.Item
+                                name="fee"
+                                initialValue={submissionFee}
+                            >
+                                <Slider
+                                    min={0}
+                                    max={1}
+                                    marks={{
+                                        0: 'Free',
+                                        0.25: '0.25ꜩ',
+                                        0.5: '0.5ꜩ',
+                                        0.75: '0.75ꜩ',
+                                        1: '1ꜩ'
+                                    }}
+                                    step={0.25}
+                                    value={submissionFee}
+                                    onChange={(value: number) => setSubmissionFee(value)}
+                                />
+                            </Form.Item>
                             <Typography.Paragraph strong={true}>
                                 Submit Button
                             </Typography.Paragraph>
@@ -482,46 +524,6 @@ function Builder(props: BuilderProps) {
                                                         />
                                                     </Form.Item>
                                                 )}
-                                                <Form.Item
-                                                    label="Default value"
-                                                    name={`item:${id}.defaultValue`}
-                                                    initialValue={item.defaultValue}
-                                                >
-                                                    {item.type === 'number'
-                                                        ? (
-                                                            <InputNumber
-                                                                style={{ width: '100%' }}
-                                                                value={item.defaultValue ? parseFloat(item.defaultValue) : undefined}
-                                                                onChange={value => {
-                                                                    let items = tzFormData.items;
-                                                                    if (value) items[id].defaultValue = value.toString();
-                                                                    else delete items[id].defaultValue;
-                                                                    setTzFormData({
-                                                                        submit: tzFormData.submit,
-                                                                        items
-                                                                    });
-                                                                    setTzFormDataActiveItemKey(id);
-                                                                }}
-                                                            />
-                                                        )
-                                                        : (
-                                                            <Input
-                                                                type="text"
-                                                                onInput={e => {
-                                                                    const value = e.currentTarget.value;
-                                                                    let items = tzFormData.items;
-                                                                    if (value.length > 0) items[id].defaultValue = value;
-                                                                    else delete items[id].defaultValue;
-                                                                    setTzFormData({
-                                                                        submit: tzFormData.submit,
-                                                                        items
-                                                                    });
-                                                                    setTzFormDataActiveItemKey(id);
-                                                                }}
-                                                            />
-                                                        )
-                                                    }
-                                                </Form.Item>
                                             </div>
                                         </Collapse.Panel>
                                     );
@@ -556,8 +558,14 @@ function Builder(props: BuilderProps) {
                             <Divider />
                             {tezos && beacon && (
                                 <TzForm
+                                    tezos={tezos}
                                     wallet={beacon.wallet}
-                                    data={{ submit: tzFormData.submit, items: Object.keys(tzFormData.items).map(id => tzFormData.items[id]) }}
+                                    id={v4()}
+                                    fee={submissionFee}
+                                    data={{
+                                        submit: tzFormData.submit, 
+                                        items: Object.keys(tzFormData.items).map(id => tzFormData.items[id]) 
+                                    }}
                                     preview={true}
                                 />
                             )}
@@ -579,9 +587,13 @@ function Builder(props: BuilderProps) {
                             <Divider />
                             {compileResponse && (
                                 <Button
-                                    onClick={() => setShowOriginateModal(true)}
+                                    disabled={compileResponseError !== undefined}
+                                    loading={compileResponseFetching}
+                                    onClick={() => {
+                                        compileCode().then(() => setShowOriginateModal(true));
+                                    }}
                                 >
-                                    Originate
+                                    Get Origination Estimate
                                 </Button>
                             )}
                             {code && (
@@ -737,6 +749,7 @@ function Builder(props: BuilderProps) {
                     </Col>
                 </Row>
                 <Modal
+                    cancelText="Close"
                     destroyOnClose={true}
                     okButtonProps={{
                         hidden: true

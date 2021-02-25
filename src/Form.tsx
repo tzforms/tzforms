@@ -1,8 +1,11 @@
+import { BeaconWallet } from '@taquito/beacon-wallet';
 import {
     ContractAbstraction,
     ContractProvider,
-    TezosToolkit
+    TezosToolkit,
+    Wallet
 } from '@taquito/taquito';
+import BigNumber from 'bignumber.js';
 import React, {
     useEffect,
     useState
@@ -20,15 +23,16 @@ switch(TZFORMS_ENVIRONMENT) {
         break;
 }
 
-const wallet = createWallet();
+let wallet = createWallet();
 const tezos = new TezosToolkit(tezosRPC);
 tezos.setWalletProvider(wallet);
 
 function Form(props: { contractAddress: string }) {
     const [tzFormId, setTzFormId] = useState<string>();
+    const [tzFormFee, setTzFormFee] = useState<BigNumber>();
     const [tzFormData, setTzFormData] = useState<TzFormData>();
 
-    const [contract, setContract] = useState<ContractAbstraction<ContractProvider>>();
+    const [contract, setContract] = useState<ContractAbstraction<Wallet>>();
     const [contractFetching, setContractFetching] = useState<boolean>(false);
     const [contractError, setContractError] = useState<string>();
 
@@ -39,7 +43,7 @@ function Form(props: { contractAddress: string }) {
     useEffect(() => {
         if (!contract && !contractFetching && !contractError) {
             setContractFetching(true);
-            tezos.contract.at(props.contractAddress)
+            tezos.wallet.at(props.contractAddress)
                 .then(value => setContract(value))
                 .catch(() => setContractError('error'))
                 .finally(() => setContractFetching(false));
@@ -53,20 +57,30 @@ function Form(props: { contractAddress: string }) {
                 .finally(() => setContractStorageFetching(false));
         }
 
-        if (contractStorage && contractStorage['tzform_id'] && contractStorage['tzform_data']) {
+        if (contractStorage && contractStorage['tzform_id'] && contractStorage['tzform_data'] && contractStorage['tzform_fee']) {
             try {
                 setTzFormId(contractStorage['tzform_id'] as string);
+                setTzFormFee(contractStorage['tzform_fee'] as BigNumber);
                 setTzFormData(JSON.parse(contractStorage['tzform_data'].replace(/%22/g, '"')))
             } catch {}
         }
-    }, [contract, contractStorage])
+    }, [contract, contractStorage]);
+
+    console.log(tzFormFee ? tzFormFee.toNumber() / 1000000 : undefined);
 
     return (
         <div>
-            {tzFormData && (
+            {contract && tzFormId && tzFormFee && tzFormData && (
                 <TzForm
+                    tezos={tezos}
                     wallet={wallet}
-                    data={tzFormData} 
+                    contract={contract}
+                    id={tzFormId}
+                    fee={tzFormFee.toNumber() / 1000000}
+                    data={tzFormData}
+                    afterSubmit={async () => {
+                        
+                    }}
                 />
             )}
         </div>

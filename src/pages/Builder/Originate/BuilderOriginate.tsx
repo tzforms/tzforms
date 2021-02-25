@@ -1,7 +1,7 @@
 import CheckCircleFilled from '@ant-design/icons/CheckCircleFilled';
 import { OriginationOperation } from '@taquito/taquito/dist/types/operations/origination-operation';
 import { Estimate } from '@taquito/taquito/dist/types/contract/estimate';
-import Modal from 'antd/lib/modal';
+import Popconfirm from 'antd/lib/popconfirm';
 import Table from 'antd/lib/table';
 import Timeline from 'antd/lib/timeline';
 import Typography from 'antd/lib/typography';
@@ -15,7 +15,6 @@ import TezosContext from '~context/TezosContext';
 import OriginateStep from '~types/OriginateStep';
 import { BuilderOriginateProps } from './BuilderOriginate.types';
 import Button from 'antd/lib/button';
-import { Link } from 'react-router-dom';
 
 const tableColumns = [
     {
@@ -195,6 +194,11 @@ function BuilderOriginate(props: BuilderOriginateProps) {
 
     return (
         <div>
+            <Typography.Title
+                style={{ fontSize: '1.5rem', fontWeight: 300 }}
+            >
+                Origination estimate
+            </Typography.Title>
             <Table
                 columns={tableColumns}
                 dataSource={estimate ? [{
@@ -243,12 +247,15 @@ function BuilderOriginate(props: BuilderOriginateProps) {
                 )}
             </Timeline>
             {props.step === OriginateStep.ESTIMATING && estimate && (
-                <Button
-                    type="primary"
-                    onClick={() => props.onStepUpdate(OriginateStep.ORIGINATING)}
+                <Popconfirm
+                    title="Originate contract?"
+                    placement="right"
+                    onConfirm={() => props.onStepUpdate(OriginateStep.ORIGINATING)}
                 >
-                    Originate
-                </Button>
+                    <Button type="primary">
+                        Originate
+                    </Button>
+                </Popconfirm>
             )}
             {props.step === OriginateStep.ORIGINATING && (
                 <Typography.Paragraph>
@@ -262,12 +269,12 @@ function BuilderOriginate(props: BuilderOriginateProps) {
             )}
             {props.step === OriginateStep.CONFIRMED && originationOperation && confirmed && (
                 <Typography.Paragraph>
-                    Your contract has been originated. You can view your deployed form at <Typography.Link 
-                        copyable={true} 
-                        href={`${TZFORMS_ENVIRONMENT === 'development' ? 'http://localhost:8080' : 'https://form.tzforms.com'}/${originationOperation.contractAddress}`}
+                    Your contract has been originated. You can view your deployed form at <Typography.Link
+                        target="_blank"
+                        href={`${TZFORMS_ENVIRONMENT === 'development' ? 'http://form.localhost:8080' : 'https://form.tzforms.com'}/${originationOperation.contractAddress}`}
                     >
-                        {TZFORMS_ENVIRONMENT === 'development' ? 'http://localhost:8080' : 'https://form.tzforms.com'}/{originationOperation.contractAddress}
-                    </Typography.Link>. View our <Link to="/articles/embed-your-form">article</Link> on how to embed the form in your website.
+                        {TZFORMS_ENVIRONMENT === 'development' ? 'http://form.localhost:8080' : 'https://form.tzforms.com'}/{originationOperation.contractAddress}
+                    </Typography.Link>.
                 </Typography.Paragraph>
             )}
         </div>

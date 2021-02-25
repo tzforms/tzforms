@@ -1,15 +1,9 @@
 import {
-    defaultEventCallbacks,
     Network,
     NetworkType,
     PermissionScope
 } from '@airgap/beacon-sdk';
-import { BeaconWallet } from '@taquito/beacon-wallet';
-import {
-    ContractAbstraction,
-    ContractProvider,
-    TezosToolkit
-} from '@taquito/taquito';
+import { TezosToolkit } from '@taquito/taquito';
 import { TezBridgeSigner } from '@taquito/tezbridge-signer';
 import ConfigProvider from 'antd/lib/config-provider';
 import Layout from 'antd/lib/layout';
@@ -17,9 +11,7 @@ import enUS from 'antd/lib/locale/en_US';
 import message from 'antd/lib/message';
 import React, {
     lazy,
-    Suspense,
-    useEffect,
-    useState
+    Suspense
 } from 'react';
 import {
     BrowserRouter,
@@ -57,20 +49,6 @@ tezos.setProvider({
 });
 
 function App() {
-    const [contract, setContract] = useState<ContractAbstraction<ContractProvider>>();
-    const [contractFetching, setContractFetching] = useState<boolean>(false);
-    const [contractError, setContractError] = useState<boolean>();
-    
-    useEffect(() => {
-        if (!contract && !contractFetching && !contractError) {
-            setContractFetching(true);
-            tezos.contract.at(TZFORMS_CONTRACT_ADDRESS)
-                .then(_contract => setContract(_contract))
-                .catch(() => setContractError(true))
-                .finally(() => setContractFetching(true))
-        }
-    })
-
     return (
         <BrowserRouter>
             <ConfigProvider

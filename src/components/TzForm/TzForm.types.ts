@@ -1,5 +1,9 @@
 import { BeaconWallet } from '@taquito/beacon-wallet';
-import { TezosToolkit } from '@taquito/taquito';
+import {
+    ContractAbstraction,
+    TezosToolkit,
+    Wallet
+} from '@taquito/taquito';
 
 export interface TzFormSubmit {
     text: string;
@@ -15,7 +19,6 @@ export interface TzFormItem {
     name: string;
     required?: boolean;
     placeholder?: string;
-    defaultValue?: string;
 }
 
 export interface TzFormData {
@@ -24,9 +27,14 @@ export interface TzFormData {
 }
 
 export interface TzFormProps {
+    tezos: TezosToolkit;
     wallet: BeaconWallet;
+    contract?: ContractAbstraction<Wallet>;
+    id: string;
+    fee: number;
     data: TzFormData;
     preview?: boolean;
+    afterSubmit?: () => void;
 }
 
 export interface TzFormValues {

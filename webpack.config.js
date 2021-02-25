@@ -10,7 +10,8 @@ const {
     ProvidePlugin
 } = require('webpack');
 
-const contractAddress = 'KT1P6Lv98csaT9bAor6DLD1qDkpHKQCaKGk5';
+const delphinetHandlerAddress = 'tz1aD8mSP312ZJueP5GDVgo66iqdymYH7Ud8';
+const mainnetHandlerAddress = 'tz1NQLupzngYycmbpygd2sWsGwTn5Z7xXjCb';
 
 const nodeModulesPath = resolve(__dirname, './node_modules');
 const srcPath = resolve(__dirname, './src');
@@ -82,7 +83,7 @@ module.exports = (env) => {
             new CleanPlugin(),
             new DefinePlugin({
                 TZFORMS_ENVIRONMENT: JSON.stringify(isProd ? 'production' : 'development'),
-                TZFORMS_CONTRACT_ADDRESS: JSON.stringify(contractAddress),
+                TZFORMS_HANDLER_ADDRESS: JSON.stringify(isProd ? delphinetHandlerAddress : mainnetHandlerAddress),
                 TZFORMS_API_URL: JSON.stringify(isProd ? 'https://api.tzforms.com' : 'http://localhost:8081')
             }),
             new ProvidePlugin({
