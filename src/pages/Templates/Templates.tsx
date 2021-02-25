@@ -15,7 +15,7 @@ function Templates(props: TemplatesProps) {
                 <Col xs={24} sm={12} md={8} lg={6} xl={6}>
                     <Card
                         className="tzf-shadow tzf-border-radius-round"
-                        cover={<img src="https://via.placeholder.com/400x200" />}
+                        /*cover={<img src="https://via.placeholder.com/400x200" />}*/
                         title="Donation"
                     >
                         <Typography.Paragraph style={{ textAlign: 'center' }}>
